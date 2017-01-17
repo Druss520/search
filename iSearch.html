@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<!--<html lang="en">-->
+<head>
+    <meta charset="UTF-8" http-equiv="Content-Type" content="text/html">
+    <title>iSearch</title>
+    <style type="text/css">
+        @font-face{
+            font-family: iconfont;
+            src:url("http://g.tbcdn.cn/tb/icon-font/1.1.5/iconfont.eot"),
+            url("http://g.tbcdn.cn/tb/icon-font/1.1.5/iconfont.woff") format("woff"),
+            url("http://g.tbcdn.cn/tb/icon-font/1.1.5/iconfont.eot?#iefix") format("embeded-opentype"),
+            url("http://g.tbcdn.cn/tb/icon-font/1.1.5/iconfont.ttf") format("truetype"),
+            url("http://g.tbcdn.cn/tb/icon-font/1.1.5/iconfont.svg#uxiconfont") format("svg")
+
+        }
+        body{
+            background-color: #333;
+        }
+        .bg-div{
+            background-image: url("img/IMG_6803.jpg");
+            width: 1500px;
+            height: 850px;
+            /*background-repeat: no-repeat;*/
+            background-size: 1500px auto;
+            margin: 0 auto;
+        }
+        .img-div{
+            background-image: url("img/logos.png");
+            background-repeat: no-repeat;
+            width: 80px;
+            height: 80px;
+            background-size: contain;
+            float: left;
+            position: relative;
+            margin: -15px 10px 0 0 ;
+        }
+        form{
+            float: left;
+            background-color: #fff;
+            height: 40px;
+            width: 350px;
+            padding: 5px;
+        }
+        .suggest{
+            width: 359px;
+            background-color: #ffffff;
+            border: 1px solid #999;
+            display: none;
+
+        }
+        .suggest ul{
+            list-style: none;
+            margin: 0;
+            padding: 0;
+
+        }
+        .suggest ul li{
+            padding: 3px;
+            font-size: 18px;
+            line-height: 30px;
+            cursor:pointer;
+        }
+        .suggest ul li:hover{
+            text-decoration: underline;
+            background-color: #cccccc;
+        }
+        .speech-input{
+            border: 0;
+            float: left;
+            height: 39px;
+            line-height: 39px;
+            outline: none;
+            width: 300px;
+            font-size: 20px;
+
+        }
+        .search-input-button{
+            border: 0;
+            background-image: url("img/google-web-search-256.png");
+            height: 35px;
+            width: 35px;
+            float: left;
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-color: white;
+            margin: 3px 0 0 10px ;
+            position: absolute;
+            outline: none;
+            cursor: pointer;
+        }
+        .box{
+            position: absolute;
+            left: 35%;
+            top: 250px;
+        }
+        .search-icon{
+            font-family: iconfont;
+            font-size: 20px;
+            font-style: normal;
+            position: absolute;
+            top:12px;
+            left: 95px;
+            z-index: 2;
+            color:#cccccc;
+        }
+    </style>
+    <link rel="stylesheet" href="speech-input.css">
+    <script type="text/javascript" src="node_modules/jquery/dist/jquery.js"></script>
+</head>
+<body>
+<!--<script type="text/javascript">-->
+<!--//    console.log(window.innerHeight + " "+window.innerWidth)-->
+<!--</script>-->
+
+<div class="bg-div">
+    <div class="box">
+    <div class="img-div">
+
+    </div>
+    <form action="http://cn.bing.com/search" target="_blank" method=get id="search-form">
+        <!--<table bgcolor="#FFFFFF">-->
+            <!--<tr><td>-->
+        <input type=text name="q" id="search-input" class="speech-input" autocomplete="off">
+        <i class="search-icon">ő</i>
+        <input type=submit class="search-input-button" value=""/>
+            <!--</td></tr>-->
+        <!--</table>-->
+    </form>
+</div>
+</div>
+
+<div class="suggest" id="search-suggest">
+    <ul id="search-ul">
+
+    </ul>
+</div>
+
+<!--<button type="button" id="hehe">hehe</button>-->
+<script src="speech-input.js"></script>
+
+<script>
+
+    $("#search-input").focus(function () {
+        $(".search-icon").hide();
+    });
+
+    $("#search-input").blur(function () {
+        if($("#search-input").val()==""){
+            $(".search-icon").show();
+        }else {
+            $(".search-icon").hide();
+        }
+    });
+
+    $("#search-suggest").css({
+        top:$("#search-form").offset().top+$("#search-form").height()+10,
+        left:$("#search-form").offset().left,
+        position:"absolute"
+    });
+
+    $("#search-input").bind('onchange',function () {
+        if($("#search-input").val()!=""){
+            $(".search-icon").hide();
+        }
+    });
+
+    $("#search-input").bind('keyup',function () {
+        var searchText = $("#search-input").val();
+
+        $(".search-icon").hide();
+        $.ajax({
+            url: 'http://api.bing.com/qsonhs.aspx?type=cb&cb=jsonpcallback&q=' + searchText,
+            dataType: "jsonp",
+            type:"GET",
+            jsonpCallback:"jsonpcallback"
+
+        });
+
+        $('#search-suggest').show().css({
+            top: $('#search-form').offset().top + $('#search-form').outerHeight(),
+            left: $('#search-form').offset().left,
+            position: 'absolute'
+        });
+
+        jsonpcallback = function(data) {
+            console.log(data);
+            var data = data.AS.Results[0].Suggests;
+            var html = "";
+            $(data).each(function(index, value) {
+                html += "<li>" + value.Txt + "</li>"
+            });
+            $("#search-ul").html(html);
+        };
+
+
+        $(document).click(function () {
+            $("#search-suggest").hide();
+
+        });
+
+        $(document).delegate('li','click',function () {
+            var text = $(this).text();
+            window.open("http://cn.bing.com/search?q="+text,"_blank");
+            $("#search-input").val(text);
+        });
+
+
+//        $.ajax({
+//           url:'https://api.bing.com/qsonhs.aspx?type=cb&cb=jsonpcallback&q='+searchtext,
+//            dataType:"jsonp"
+//        });
+//
+//        function jsonpcallback(data) {
+//            console.log(data);
+//            var gg = data.AS.Results[0].Suggests;
+//            var html = "";
+//            console.log(gg);
+//            $(gg).each(function(index, value) {
+//                html += "<li>" + value.Txt + "</li>"
+//            });
+//            $("#search-ul").html(html);
+//        };
+//
+//        $("#search-suggest").show().css({
+//            top:$("#search-form").offset().top+$("#search-form").height()+5,
+//            left:$("#search-form").offset().left,
+//            position:"absolute"
+//        });
+
+    });
+
+//    $("#hehe").click(function () {
+//        console.log("form")
+//        console.log($("#search-form").offset())
+//        console.log("suggest")
+//        console.log($("#search-suggest").offset())
+//        console.log($("#search-form").offset().left)
+//        console.log($("#search-suggest").offset().left)
+//    })
+</script>
+
+<!--<form method=get action="http://www.google.com/search">-->
+    <!--<table Googlebgcolor="#FFFFFF"><tr><td>-->
+        <!--<a href="http://www.google.com/intl/zh-CN/">-->
+            <!--<img src="http://www.google.com/logos/Logo_40wht.gif"-->
+                 <!--border="0" alt="Google" align="absmiddle"></a>-->
+        <!--<input type=text name=q size=31 maxlength=255 value="">-->
+        <!--<input type=hidden name=ie value=GB2312>-->
+        <!--<input type=hidden name=oe value=GB2312>-->
+        <!--<input type=hidden name=hl value=zh-CN>-->
+        <!--<input type=submit name=btnG value="Google 搜索">-->
+    <!--</td></tr></table>-->
+<!--</form>-->
+
+<!--<form action="http://www.baidu.com/baidu" target="_blank">-->
+    <!--<table bgcolor="#FFFFFF"><tr><td>-->
+        <!--<input name=tn type=hidden value=baidu>-->
+        <!--<a href="http://www.baidu.com/"><img src="https://gss0.bdstatic.com/70cFsjip0QIZ8tyhnq/img/logo-80px.gif" alt="Baidu" align="bottom" border="0"></a>-->
+        <!--<input type=text name=word size=30>-->
+        <!--<input type="submit" value="百度搜索">-->
+    <!--</td></tr></table>-->
+<!--</form>-->
+</body>
+</html>
